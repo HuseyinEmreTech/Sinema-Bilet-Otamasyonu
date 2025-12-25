@@ -144,7 +144,7 @@ namespace SinemaBiletOtomasyonu.Database
         // --- Film İşlemleri ---
         public static List<Film> GetAllFilms()
         {
-            return store.Films;
+            return store.Films.Where(f => !f.IsDeleted).ToList();
         }
 
         public static Film GetFilmById(int filmId)
@@ -158,14 +158,8 @@ namespace SinemaBiletOtomasyonu.Database
              film.FilmId = newId;
              store.Films.Add(film);
              
-             // Yeni film için varsayılan seansları oluştur
-             int nextSessionId = store.Sessions.Any() ? store.Sessions.Max(s => s.SessionId) + 1 : 1;
-             foreach(var hall in store.Halls)
-             {
-                 store.Sessions.Add(new Session { SessionId = nextSessionId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "11:00" });
-                 store.Sessions.Add(new Session { SessionId = nextSessionId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "15:00" });
-                 store.Sessions.Add(new Session { SessionId = nextSessionId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "19:00" });
-             }
+              // Auto-Session Creation REMOVED for Manual Management
+              // Users will now add sessions manually via Admin Dashboard
 
              SaveData();
         }
@@ -176,11 +170,11 @@ namespace SinemaBiletOtomasyonu.Database
             if (film != null)
             {
                 // Remove related sessions/tickets?
-                // For simplicity, just remove film. Real app should handle constraints.
-                store.Films.Remove(film);
+                // Soft delete
+                film.IsDeleted = true;
                 
-                // Cleanup sessions
-                store.Sessions.RemoveAll(s => s.FilmId == filmId);
+                // Keep sessions! 
+                // store.Sessions.RemoveAll(s => s.FilmId == filmId);
                 
                 SaveData();
                 return true;
@@ -261,10 +255,45 @@ namespace SinemaBiletOtomasyonu.Database
              var ticket = store.Tickets.FirstOrDefault(t => t.TicketCode == ticketCode);
              if (ticket == null) return false;
 
-             // Bileti sil - Koltuk uygunluğu artık dinamik query ile belirleniyor
              store.Tickets.Remove(ticket);
              SaveData();
              return true;
+        }
+
+        // --- Seans İşlemleri (Manuel) ---
+        public static List<Session> GetAllSessions()
+        {
+            return store.Sessions;
+        }
+
+        public static bool AddSession(Session session)
+        {
+            // Basit çakışma kontrolü: Aynı Salon, Aynı Saat
+            if(store.Sessions.Any(s => s.HallId == session.HallId && s.Time == session.Time))
+            {
+                // Çakışma var!
+                // Daha ileri seviye kontrol: Film süresi vs. eklenebilir ama şimdilik exact match
+                return false; 
+            }
+
+            int newId = store.Sessions.Any() ? store.Sessions.Max(s => s.SessionId) + 1 : 1;
+            session.SessionId = newId;
+            store.Sessions.Add(session);
+            SaveData();
+            return true;
+        }
+
+        public static void DeleteSession(int sessionId)
+        {
+             var session = store.Sessions.FirstOrDefault(s => s.SessionId == sessionId);
+             if(session != null)
+             {
+                 store.Sessions.Remove(session);
+                 // Bileti alınan seans silinirse biletleri ne yapacağız?
+                 // Şimdilik biletleri de silelim ki tutarsızlık olmasın (Cascading Delete)
+                 store.Tickets.RemoveAll(t => t.SessionId == sessionId);
+                 SaveData();
+             }
         }
     }
 }

@@ -11,5 +11,6 @@ namespace SinemaBiletOtomasyonu.Models
         public int Duration { get; set; } // Dakika cinsinden
         public decimal Price { get; set; }
         public string ImagePath { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }

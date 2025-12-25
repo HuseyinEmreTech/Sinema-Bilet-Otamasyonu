@@ -12,11 +12,21 @@ namespace SinemaBiletOtomasyonu.Forms
     {
         private TabControl tabControl;
         private TabPage tabFilms;
+        private TabPage tabSessions;
         private TabPage tabReports;
         
         private DataGridView dgvFilms;
         private Button btnAddFilm;
         private Button btnDeleteFilm;
+        
+        // Session Tab Controls
+        private DataGridView dgvSessions;
+        private ComboBox cmbFilms;
+        private ComboBox cmbHalls;
+        private MaskedTextBox txtTime;
+        private Button btnAddSession;
+        private Button btnDeleteSession;
+
         private Label lblTotalRevenue;
 
         public AdminDashboardForm()
@@ -37,14 +47,20 @@ namespace SinemaBiletOtomasyonu.Forms
             tabFilms = new TabPage("Film Yönetimi");
             tabFilms.BackColor = ModernUIHelper.PanelBackground;
             
+            
+            tabSessions = new TabPage("Seans Yönetimi");
+            tabSessions.BackColor = ModernUIHelper.PanelBackground;
+            
             tabReports = new TabPage("Raporlar");
             tabReports.BackColor = ModernUIHelper.PanelBackground;
             
             tabControl.Controls.Add(tabFilms);
+            tabControl.Controls.Add(tabSessions);
             tabControl.Controls.Add(tabReports);
             this.Controls.Add(tabControl);
             
             InitializeFilmsTab();
+            InitializeSessionsTab();
             InitializeReportsTab();
         }
 
@@ -147,6 +163,115 @@ namespace SinemaBiletOtomasyonu.Forms
                 {
                     DatabaseHelper.DeleteFilm(filmId);
                     RefreshFilmList();
+                }
+            }
+        }
+
+
+        private void InitializeSessionsTab()
+        {
+            // Grid
+            dgvSessions = new DataGridView();
+            dgvSessions.Location = new Point(20, 20);
+            dgvSessions.Size = new Size(720, 350);
+            dgvSessions.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvSessions.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvSessions.BackgroundColor = Color.FromArgb(40,40,40);
+            dgvSessions.ForeColor = Color.Black; 
+            tabSessions.Controls.Add(dgvSessions);
+            
+            // Input Panel
+            Panel pnlInput = new Panel { Location = new Point(20, 390), Size = new Size(720, 100), BackColor = Color.FromArgb(50,50,50) };
+            tabSessions.Controls.Add(pnlInput);
+
+            Label lblF = new Label { Text = "Film:", Location = new Point(10, 10), ForeColor = Color.White, AutoSize = true };
+            cmbFilms = new ComboBox { Location = new Point(10, 35), Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
+            
+            Label lblH = new Label { Text = "Salon:", Location = new Point(220, 10), ForeColor = Color.White, AutoSize = true };
+            cmbHalls = new ComboBox { Location = new Point(220, 35), Width = 150, DropDownStyle = ComboBoxStyle.DropDownList };
+            
+            Label lblT = new Label { Text = "Saat (HH:mm):", Location = new Point(380, 10), ForeColor = Color.White, AutoSize = true };
+            txtTime = new MaskedTextBox { Mask = "00:00", Location = new Point(380, 35), Width = 80 };
+            
+            pnlInput.Controls.AddRange(new Control[] { lblF, cmbFilms, lblH, cmbHalls, lblT, txtTime });
+
+            // Buttons
+            btnAddSession = new Button { Text = "Seans Ekle", Location = new Point(500, 30), Size = new Size(100, 30), BackColor = ModernUIHelper.PrimaryColor, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            btnAddSession.Click += BtnAddSession_Click;
+            pnlInput.Controls.Add(btnAddSession);
+            
+            btnDeleteSession = new Button { Text = "Seçiliyi Sil", Location = new Point(610, 30), Size = new Size(100, 30), BackColor = Color.DarkRed, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            btnDeleteSession.Click += BtnDeleteSession_Click;
+            pnlInput.Controls.Add(btnDeleteSession);
+            
+            RefreshSessionList();
+        }
+
+        private void RefreshSessionList()
+        {
+            // Grid Update
+            dgvSessions.DataSource = null;
+            // Join data for better display
+            var sessions = DatabaseHelper.GetAllSessions();
+            var films = DatabaseHelper.GetAllFilms(); // Gets only active films
+            var halls = DatabaseHelper.GetAllHalls();
+            
+            var displayList = sessions.Select(s => new 
+            {
+                s.SessionId,
+                FilmName = films.FirstOrDefault(f => f.FilmId == s.FilmId)?.FilmName ?? "Silinmiş Film",
+                HallName = halls.FirstOrDefault(h => h.HallId == s.HallId)?.HallName,
+                s.Time
+            }).OrderBy(x => x.FilmName).ThenBy(x => x.Time).ToList();
+            
+            dgvSessions.DataSource = displayList;
+
+            // Combobox Update
+            cmbFilms.DataSource = null;
+            cmbFilms.DataSource = films;
+            cmbFilms.DisplayMember = "FilmName";
+            cmbFilms.ValueMember = "FilmId";
+
+            cmbHalls.DataSource = null;
+            cmbHalls.DataSource = halls;
+            cmbHalls.DisplayMember = "HallName";
+            cmbHalls.ValueMember = "HallId";
+        }
+
+        private void BtnAddSession_Click(object sender, EventArgs e)
+        {
+            if(cmbFilms.SelectedItem == null || cmbHalls.SelectedItem == null || !txtTime.MaskCompleted)
+            {
+                MessageBox.Show("Lütfen tüm alanları doldurun.");
+                return;
+            }
+
+            int filmId = (int)cmbFilms.SelectedValue;
+            int hallId = (int)cmbHalls.SelectedValue;
+            string time = txtTime.Text;
+
+            Session s = new Session { FilmId = filmId, HallId = hallId, Time = time };
+            
+            if(DatabaseHelper.AddSession(s))
+            {
+                MessageBox.Show("Seans eklendi.");
+                RefreshSessionList();
+            }
+            else
+            {
+                MessageBox.Show("Seans eklenemedi! (Çakışma olabilir)");
+            }
+        }
+
+        private void BtnDeleteSession_Click(object sender, EventArgs e)
+        {
+             if (dgvSessions.SelectedRows.Count > 0)
+            {
+                int sId = (int)dgvSessions.SelectedRows[0].Cells["SessionId"].Value;
+                if(MessageBox.Show("Seansı silmek istiyor musunuz? İlgili biletler de silinecektir.", "Onay", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    DatabaseHelper.DeleteSession(sId);
+                    RefreshSessionList();
                 }
             }
         }
