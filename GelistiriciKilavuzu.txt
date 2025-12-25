@@ -1,0 +1,32 @@
+SİNEMA BİLET OTOMASYONU - GELİŞTİRİCİ VE KURULUM KILAVUZU
+=========================================================
+
+Bu proje Visual Studio 2022 ve .NET Framework 4.7.2 kullanılarak geliştirilmiştir.
+Arkadaşlarınızın projeyi kendi bilgisayarlarında çalıştırabilmesi için aşağıdaki adımları izlemeleri gerekmektedir.
+
+GEREKSİNİMLER
+-------------
+1. Visual Studio 2022 (Community, Professional veya Enterprise)
+2. Kurulum sırasında ".NET Masaüstü Geliştirme" (Desktop development with .NET) iş yükünün seçili olması gerekir.
+
+PROJEYİ AÇMA VE ÇALIŞTIRMA
+--------------------------
+1. Klasördeki "SinemaBiletOtomasyonu.sln" (Solution) dosyasına çift tıklayarak Visual Studio'yu açın.
+2. Visual Studio açıldığında, sağ taraftaki "Solution Explorer" (Çözüm Gezgini) penceresinde proje dosyalarını görmelisiniz.
+3. Üst menüden "Build" -> "Rebuild Solution" (Çözümü Yeniden Derle) seçeneğine tıklayarak projenin sorunsuz derlendiğinden emin olun.
+4. Projeyi çalıştırmak için klavyeden "F5" tuşuna basın veya üstteki yeşil "Start" butonuna tıklayın.
+
+OLASI HATALAR VE ÇÖZÜMLERİ
+--------------------------
+- "Form Tasarımcısı Açılmıyor": Bazen Visual Studio tasarımı yüklerken hata verebilir. Çözümü kapatıp açmak veya projeyi bir kez derleyip (Build) tekrar denemek sorunu çözer.
+- "Veri Dosyası Hatası": Proje "cinema-data.xml" dosyasını otomatik oluşturur. Eğer veri hatası alırsanız, bu dosyayı silip projeyi yeniden başlatın (Veriler sıfırlanacaktır).
+
+PROJE YAPISI
+------------
+- Forms/: Uygulamanın ekranları (Ana Menü, Bilet Seçimi, Ödeme, Admin).
+- Database/: Veri erişim katmanı ve XML işlemleri.
+- Models/: Veri tabanı nesneleri (Film, Koltuk, Bilet).
+- Controls/: Özel kullanıcı kontrolleri (Film Kartı).
+- Helpers/: UI teması ve yardımcı fonksiyonlar.
+
+İyi Çalışmalar!

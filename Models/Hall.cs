@@ -10,5 +10,6 @@ namespace SinemaBiletOtomasyonu.Models
         public int TotalSeats { get; set; }
         public int RowCount { get; set; }
         public int ColumnCount { get; set; }
+        public decimal PriceMultiplier { get; set; } = 1.0m; // Varsayılan 1.0 (Standart)
     }
 }

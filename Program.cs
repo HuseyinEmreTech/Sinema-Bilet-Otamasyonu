@@ -20,7 +20,12 @@ namespace SinemaBiletOtomasyonu
             DatabaseHelper.SeedData();
 
             // Ana formu başlat
-            Application.Run(new MainForm());
+            // Splash Screen
+            WelcomeForm splash = new WelcomeForm();
+            if (splash.ShowDialog() == DialogResult.OK)
+            {
+                Application.Run(new MainForm());
+            }
         }
     }
 }

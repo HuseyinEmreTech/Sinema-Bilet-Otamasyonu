@@ -43,6 +43,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
@@ -51,14 +52,42 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\FilmCard.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Database\DatabaseHelper.cs" />
-    <Compile Include="Forms\CancelTicketForm.cs" />
-    <Compile Include="Forms\MainForm.cs" />
-    <Compile Include="Forms\PaymentForm.cs" />
-    <Compile Include="Forms\SeatSelectionForm.cs" />
+    <Compile Include="Forms\AdminDashboardForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AdminLoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PaymentForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PaymentForm.Designer.cs">
+      <DependentUpon>PaymentForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\SeatSelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SeatSelectionForm.Designer.cs">
+      <DependentUpon>SeatSelectionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\WelcomeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Helpers\ModernUIHelper.cs" />
     <Compile Include="Models\Film.cs" />
     <Compile Include="Models\Hall.cs" />
     <Compile Include="Models\Seat.cs" />
+    <Compile Include="Models\Session.cs" />
     <Compile Include="Models\Ticket.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

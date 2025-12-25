@@ -7,344 +7,264 @@ using SinemaBiletOtomasyonu.Models;
 
 namespace SinemaBiletOtomasyonu.Database
 {
-    /// <summary>
-    /// Uygulama içi veri depolamasýný yöneten yardýmcý sýnýf
-    /// </summary>
-    public class DatabaseHelper
+    // Verileri tutacak ana sÄ±nÄ±f (XML Root)
+    [XmlRoot("DataStore")]
+    public class DataStore
     {
-        private static readonly object SyncRoot = new object();
-        private static readonly string DataFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cinema-data.xml");
-        private static DataStore store = LoadStore();
+        public List<Film> Films { get; set; } = new List<Film>();
+        public List<Hall> Halls { get; set; } = new List<Hall>();
+        public List<Seat> Seats { get; set; } = new List<Seat>();
+        public List<Session> Sessions { get; set; } = new List<Session>();
+        public List<Ticket> Tickets { get; set; } = new List<Ticket>();
+    }
 
-        /// <summary>
-        /// Veritabanýný ve tablolarý oluþturur (dosya tabanlý)
-        /// </summary>
+    public static class DatabaseHelper
+    {
+        private static DataStore store = new DataStore();
+        public static DataStore DataStoreInstance => store; // Raporlama iÃ§in aÃ§Ä±k eriÅŸim
+        private static string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cinema-data.xml");
+
+        static DatabaseHelper()
+        {
+            LoadData();
+        }
+
+        public static void LoadData()
+        {
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(DataStore));
+                    using (FileStream fs = new FileStream(filePath, FileMode.Open))
+                    {
+                        store = (DataStore)serializer.Deserialize(fs);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Hata durumunda boÅŸ store ile devam et ama hatayÄ± logla varsa
+                    System.Diagnostics.Debug.WriteLine("Veri yÃ¼kleme hatasÄ±: " + ex.Message);
+                }
+            }
+        }
+
         public static void InitializeDatabase()
         {
-            lock (SyncRoot)
-            {
-                store = store ?? new DataStore();
-                EnsureCollections();
-                SaveStore();
-            }
+            LoadData();
         }
 
-        /// <summary>
-        /// Örnek verileri veritabanýna ekler
-        /// </summary>
         public static void SeedData()
         {
-            lock (SyncRoot)
+            if (store.Films.Count == 0)
             {
-                EnsureCollections();
+                // 10+ PopÃ¼ler Film Verisi
+                store.Films.Add(new Film { FilmId = 1, FilmName = "Avatar: Su Yolu", Genre = "Bilim Kurgu", Duration = 192, Price = 85.00m, ImagePath = "avatar2" });
+                store.Films.Add(new Film { FilmId = 2, FilmName = "HÄ±zlÄ± ve Ã–fkeli 10", Genre = "Aksiyon", Duration = 140, Price = 75.00m, ImagePath = "fastx" });
+                store.Films.Add(new Film { FilmId = 3, FilmName = "Barbie", Genre = "Komedi", Duration = 114, Price = 80.00m, ImagePath = "barbie" });
+                store.Films.Add(new Film { FilmId = 4, FilmName = "Oppenheimer", Genre = "Biyografi", Duration = 180, Price = 85.00m, ImagePath = "oppenheimer" });
+                store.Films.Add(new Film { FilmId = 5, FilmName = "Ã–rÃ¼mcek-Adam: Ã–rÃ¼mcek Evrenine GeÃ§iÅŸ", Genre = "Animasyon", Duration = 140, Price = 70.00m, ImagePath = "spiderman" });
+                store.Films.Add(new Film { FilmId = 6, FilmName = "John Wick 4", Genre = "Aksiyon", Duration = 169, Price = 80.00m, ImagePath = "johnwick4" });
+                store.Films.Add(new Film { FilmId = 7, FilmName = "GÃ¶revimiz Tehlike 7", Genre = "Aksiyon", Duration = 163, Price = 80.00m, ImagePath = "mi7" });
+                store.Films.Add(new Film { FilmId = 8, FilmName = "Transformers: CanavarlarÄ±n YÃ¼kseliÅŸi", Genre = "Bilim Kurgu", Duration = 127, Price = 75.00m, ImagePath = "transformers" });
+                store.Films.Add(new Film { FilmId = 9, FilmName = "Galaksinin KoruyucularÄ± 3", Genre = "Bilim Kurgu", Duration = 150, Price = 75.00m, ImagePath = "gotg3" });
+                store.Films.Add(new Film { FilmId = 10, FilmName = "The Flash", Genre = "Aksiyon", Duration = 144, Price = 70.00m, ImagePath = "flash" });
+                store.Films.Add(new Film { FilmId = 11, FilmName = "Dune: Ã‡Ã¶l Gezegeni BÃ¶lÃ¼m Ä°ki", Genre = "Bilim Kurgu", Duration = 166, Price = 90.00m, ImagePath = "dune2" });
 
-                if (store.Films.Count == 0)
+                // VarsayÄ±lan Salonlar
+                if (!store.Halls.Any())
                 {
-                    store.Films.AddRange(new[]
-                    {
-                        new Film { FilmId = 1, FilmName = "Avatar: Su Yolu", Genre = "Bilim Kurgu", Duration = 192, Price = 75.00m },
-                        new Film { FilmId = 2, FilmName = "Dünyanýn Merkezinde", Genre = "Drama", Duration = 140, Price = 65.00m },
-                        new Film { FilmId = 3, FilmName = "Hýzlý ve Öfkeli 10", Genre = "Aksiyon", Duration = 141, Price = 70.00m },
-                        new Film { FilmId = 4, FilmName = "Küçük Deniz Kýzý", Genre = "Animasyon", Duration = 135, Price = 60.00m },
-                        new Film { FilmId = 5, FilmName = "Oppenheimer", Genre = "Biyografi", Duration = 180, Price = 80.00m },
-                        new Film { FilmId = 6, FilmName = "Barbie", Genre = "Komedi", Duration = 114, Price = 65.00m }
-                    });
+                    store.Halls.Add(new Hall { HallId = 1, HallName = "Salon 1 (IMAX)", RowCount = 5, ColumnCount = 8, PriceMultiplier = 1.2m });
+                    store.Halls.Add(new Hall { HallId = 2, HallName = "Salon 2 (Gold Class)", RowCount = 4, ColumnCount = 6, PriceMultiplier = 1.5m });
+                    store.Halls.Add(new Hall { HallId = 3, HallName = "Salon 3", RowCount = 6, ColumnCount = 10, PriceMultiplier = 1.0m });
                 }
 
-                if (store.Halls.Count == 0)
-                {
-                    store.Halls.AddRange(new[]
-                    {
-                        new Hall { HallId = 1, HallName = "Salon 1", TotalSeats = 60, RowCount = 6, ColumnCount = 10 },
-                        new Hall { HallId = 2, HallName = "Salon 2", TotalSeats = 80, RowCount = 8, ColumnCount = 10 },
-                        new Hall { HallId = 3, HallName = "VIP Salon", TotalSeats = 40, RowCount = 5, ColumnCount = 8 }
-                    });
-                }
+                // KoltuklarÄ± oluÅŸtur (3 Salon iÃ§in)
+                CreateSeatsForHall(1);
+                CreateSeatsForHall(2);
+                CreateSeatsForHall(3);
 
-                if (store.Seats.Count == 0 && store.Halls.Count > 0)
+                SaveData();
+            }
+
+            // SeanslarÄ± Seed et
+            if (store.Sessions.Count == 0 && store.Films.Count > 0 && store.Halls.Count > 0) 
+            {
+                int sId = 1;
+                foreach(var film in store.Films)
                 {
-                    foreach (var hall in store.Halls)
+                    // Her film iÃ§in rastgele salon ve seans ata
+                    foreach(var hall in store.Halls)
                     {
-                        CreateSeatsForHall(hall.HallId, hall.RowCount, hall.ColumnCount);
+                         // BasitleÅŸtirme iÃ§in her film her salonda oynasÄ±n
+                        store.Sessions.Add(new Session { SessionId = sId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "11:00" });
+                        store.Sessions.Add(new Session { SessionId = sId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "15:00" });
+                        store.Sessions.Add(new Session { SessionId = sId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "19:00" });
+                        store.Sessions.Add(new Session { SessionId = sId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "22:00" });
                     }
                 }
-
-                SaveStore();
+                SaveData();
             }
         }
-
-        /// <summary>
-        /// Belirtilen salon için koltuklarý oluþturur
-        /// </summary>
-        private static void CreateSeatsForHall(int hallId, int rows, int columns)
+        
+        private static void CreateSeatsForHall(int hallId)
         {
-            for (int row = 1; row <= rows; row++)
+            Hall hall = store.Halls.FirstOrDefault(h => h.HallId == hallId);
+            if(hall == null) return;
+            
+            int seatIdCounter = store.Seats.Any() ? store.Seats.Max(s => s.SeatId) + 1 : 1;
+            for(int r=1; r<=hall.RowCount; r++)
             {
-                for (int col = 1; col <= columns; col++)
+                for(int c=1; c<=hall.ColumnCount; c++)
                 {
-                    store.Seats.Add(new Seat
+                    if(!store.Seats.Any(s => s.HallId == hallId && s.RowNumber == r && s.SeatNumber == c))
                     {
-                        SeatId = GetNextSeatId(),
-                        HallId = hallId,
-                        RowNumber = row,
-                        SeatNumber = col,
-                        IsAvailable = true
-                    });
+                         store.Seats.Add(new Seat { SeatId = seatIdCounter++, HallId = hallId, RowNumber = r, SeatNumber = c, IsAvailable = true });
+                    }
                 }
-            }
+             }
         }
 
-        /// <summary>
-        /// Tüm filmleri getirir
-        /// </summary>
-        public static List<Film> GetAllFilms()
-        {
-            lock (SyncRoot)
-            {
-                return store.Films.Select(f => Clone(f)).ToList();
-            }
-        }
-
-        /// <summary>
-        /// Tüm salonlarý getirir
-        /// </summary>
-        public static List<Hall> GetAllHalls()
-        {
-            lock (SyncRoot)
-            {
-                return store.Halls.Select(h => Clone(h)).ToList();
-            }
-        }
-
-        /// <summary>
-        /// Belirtilen salona ait koltuklarý getirir
-        /// </summary>
-        public static List<Seat> GetSeatsByHall(int hallId)
-        {
-            lock (SyncRoot)
-            {
-                return store.Seats
-                    .Where(s => s.HallId == hallId)
-                    .OrderBy(s => s.RowNumber)
-                    .ThenBy(s => s.SeatNumber)
-                    .Select(s => Clone(s))
-                    .ToList();
-            }
-        }
-
-        /// <summary>
-        /// Yeni bilet ekler
-        /// </summary>
-        public static bool InsertTicket(Ticket ticket)
-        {
-            lock (SyncRoot)
-            {
-                EnsureCollections();
-                var seat = store.Seats.FirstOrDefault(s => s.SeatId == ticket.SeatId);
-                if (seat == null || !seat.IsAvailable)
-                {
-                    return false;
-                }
-
-                ticket.TicketId = GetNextTicketId();
-                store.Tickets.Add(Clone(ticket));
-                seat.IsAvailable = false;
-                SaveStore();
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Bilet koduna göre bileti getirir
-        /// </summary>
-        public static Ticket GetTicketByCode(string ticketCode)
-        {
-            lock (SyncRoot)
-            {
-                var ticket = store.Tickets.FirstOrDefault(t => t.TicketCode == ticketCode);
-                return ticket != null ? Clone(ticket) : null;
-            }
-        }
-
-        /// <summary>
-        /// Bileti iptal eder
-        /// </summary>
-        public static bool CancelTicket(string ticketCode)
-        {
-            lock (SyncRoot)
-            {
-                var ticket = store.Tickets.FirstOrDefault(t => t.TicketCode == ticketCode);
-                if (ticket == null)
-                {
-                    return false;
-                }
-
-                var seat = store.Seats.FirstOrDefault(s => s.SeatId == ticket.SeatId);
-                if (seat != null)
-                {
-                    seat.IsAvailable = true;
-                }
-
-                store.Tickets.Remove(ticket);
-                SaveStore();
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Film ID'sine göre film getirir
-        /// </summary>
-        public static Film GetFilmById(int filmId)
-        {
-            lock (SyncRoot)
-            {
-                var film = store.Films.FirstOrDefault(f => f.FilmId == filmId);
-                return film != null ? Clone(film) : null;
-            }
-        }
-
-        /// <summary>
-        /// Koltuk ID'sine göre koltuk getirir
-        /// </summary>
-        public static Seat GetSeatById(int seatId)
-        {
-            lock (SyncRoot)
-            {
-                var seat = store.Seats.FirstOrDefault(s => s.SeatId == seatId);
-                return seat != null ? Clone(seat) : null;
-            }
-        }
-
-        /// <summary>
-        /// Salon ID'sine göre salon getirir
-        /// </summary>
-        public static Hall GetHallById(int hallId)
-        {
-            lock (SyncRoot)
-            {
-                var hall = store.Halls.FirstOrDefault(h => h.HallId == hallId);
-                return hall != null ? Clone(hall) : null;
-            }
-        }
-
-        private static void EnsureCollections()
-        {
-            store.Films = store.Films ?? new List<Film>();
-            store.Halls = store.Halls ?? new List<Hall>();
-            store.Seats = store.Seats ?? new List<Seat>();
-            store.Tickets = store.Tickets ?? new List<Ticket>();
-        }
-
-        private static int GetNextSeatId()
-        {
-            return store.Seats.Count == 0 ? 1 : store.Seats.Max(s => s.SeatId) + 1;
-        }
-
-        private static int GetNextTicketId()
-        {
-            return store.Tickets.Count == 0 ? 1 : store.Tickets.Max(t => t.TicketId) + 1;
-        }
-
-        private static DataStore LoadStore()
+        public static void SaveData()
         {
             try
             {
-                if (File.Exists(DataFilePath))
+                XmlSerializer serializer = new XmlSerializer(typeof(DataStore));
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
                 {
-                    using (var fs = File.OpenRead(DataFilePath))
-                    {
-                        var serializer = new XmlSerializer(typeof(DataStore));
-                        var loaded = serializer.Deserialize(fs) as DataStore;
-                        if (loaded != null)
-                        {
-                            return loaded;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Bozuk dosya durumunda yeni depo oluþturulacak
-            }
-            return new DataStore();
-        }
-
-        private static void SaveStore()
-        {
-            EnsureCollections();
-            try
-            {
-                using (var fs = File.Create(DataFilePath))
-                {
-                    var serializer = new XmlSerializer(typeof(DataStore));
                     serializer.Serialize(fs, store);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Yazma hatasý durumunda sessiz geç
+                System.Diagnostics.Debug.WriteLine("Veri kaydetme hatasÄ±: " + ex.Message);
             }
         }
 
-        private static Film Clone(Film film)
+        // --- Film Ä°ÅŸlemleri ---
+        public static List<Film> GetAllFilms()
         {
-            return new Film
-            {
-                FilmId = film.FilmId,
-                FilmName = film.FilmName,
-                Genre = film.Genre,
-                Duration = film.Duration,
-                Price = film.Price,
-                ImagePath = film.ImagePath
-            };
+            return store.Films;
         }
 
-        private static Hall Clone(Hall hall)
+        public static Film GetFilmById(int filmId)
         {
-            return new Hall
-            {
-                HallId = hall.HallId,
-                HallName = hall.HallName,
-                TotalSeats = hall.TotalSeats,
-                RowCount = hall.RowCount,
-                ColumnCount = hall.ColumnCount
-            };
+            return store.Films.FirstOrDefault(f => f.FilmId == filmId);
         }
 
-        private static Seat Clone(Seat seat)
+        public static void AddFilm(Film film)
         {
-            return new Seat
-            {
-                SeatId = seat.SeatId,
-                HallId = seat.HallId,
-                RowNumber = seat.RowNumber,
-                SeatNumber = seat.SeatNumber,
-                IsAvailable = seat.IsAvailable
-            };
+             int newId = store.Films.Any() ? store.Films.Max(f => f.FilmId) + 1 : 1;
+             film.FilmId = newId;
+             store.Films.Add(film);
+             
+             // Yeni film iÃ§in varsayÄ±lan seanslarÄ± oluÅŸtur
+             int nextSessionId = store.Sessions.Any() ? store.Sessions.Max(s => s.SessionId) + 1 : 1;
+             foreach(var hall in store.Halls)
+             {
+                 store.Sessions.Add(new Session { SessionId = nextSessionId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "11:00" });
+                 store.Sessions.Add(new Session { SessionId = nextSessionId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "15:00" });
+                 store.Sessions.Add(new Session { SessionId = nextSessionId++, FilmId = film.FilmId, HallId = hall.HallId, Time = "19:00" });
+             }
+
+             SaveData();
         }
 
-        private static Ticket Clone(Ticket ticket)
+        public static bool DeleteFilm(int filmId)
         {
-            return new Ticket
+            var film = GetFilmById(filmId);
+            if (film != null)
             {
-                TicketId = ticket.TicketId,
-                FilmId = ticket.FilmId,
-                HallId = ticket.HallId,
-                SeatId = ticket.SeatId,
-                CustomerName = ticket.CustomerName,
-                PurchaseDate = ticket.PurchaseDate,
-                TotalPrice = ticket.TotalPrice,
-                TicketCode = ticket.TicketCode
-            };
+                // Remove related sessions/tickets?
+                // For simplicity, just remove film. Real app should handle constraints.
+                store.Films.Remove(film);
+                
+                // Cleanup sessions
+                store.Sessions.RemoveAll(s => s.FilmId == filmId);
+                
+                SaveData();
+                return true;
+            }
+            return false;
         }
 
-        [Serializable]
-        public class DataStore
+        // --- Salon Ä°ÅŸlemleri ---
+        public static List<Hall> GetAllHalls()
         {
-            public List<Film> Films { get; set; } = new List<Film>();
-            public List<Hall> Halls { get; set; } = new List<Hall>();
-            public List<Seat> Seats { get; set; } = new List<Seat>();
-            public List<Ticket> Tickets { get; set; } = new List<Ticket>();
+            return store.Halls;
+        }
+
+        public static Hall GetHallById(int hallId)
+        {
+            return store.Halls.FirstOrDefault(h => h.HallId == hallId);
+        }
+
+        // --- Koltuk Ä°ÅŸlemleri ---
+        public static List<Seat> GetSeatsByHall(int hallId)
+        {
+            return store.Seats.Where(s => s.HallId == hallId).ToList();
+        }
+
+        public static Seat GetSeatById(int seatId)
+        {
+            return store.Seats.FirstOrDefault(s => s.SeatId == seatId);
+        }
+
+        // --- Bilet Ä°ÅŸlemleri ---
+        public static Ticket GetTicketByCode(string code)
+        {
+            return store.Tickets.FirstOrDefault(t => t.TicketCode == code);
+        }
+
+        public static List<int> GetOccupiedSeatIds(int sessionId)
+        {
+            return store.Tickets.Where(t => t.SessionId == sessionId).Select(t => t.SeatId).ToList();
+        }
+
+        public static Session GetSessionById(int id) => store.Sessions.FirstOrDefault(s => s.SessionId == id); 
+        
+        public static List<Session> GetSessionsByFilmAndHall(int filmId, int hallId) 
+        {
+            return store.Sessions.Where(s => s.FilmId == filmId && s.HallId == hallId).ToList();
+        }
+
+        public static Ticket GetTicketBySessionAndSeat(int sessionId, int seatId) 
+        {
+             return store.Tickets.FirstOrDefault(t => t.SessionId == sessionId && t.SeatId == seatId);
+        }
+
+        public static bool InsertTicket(Ticket ticket)
+        {
+            try
+            {
+                int newId = store.Tickets.Any() ? store.Tickets.Max(t => t.TicketId) + 1 : 1;
+                ticket.TicketId = newId;
+
+                // Ã‡ifte rezervasyon kontrolÃ¼
+                if (store.Tickets.Any(t => t.SessionId == ticket.SessionId && t.SeatId == ticket.SeatId))
+                {
+                    return false; // Koltuk zaten dolu
+                }
+
+                store.Tickets.Add(ticket);
+                SaveData();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool CancelTicket(string ticketCode)
+        {
+             var ticket = store.Tickets.FirstOrDefault(t => t.TicketCode == ticketCode);
+             if (ticket == null) return false;
+
+             // Bileti sil - Koltuk uygunluÄŸu artÄ±k dinamik query ile belirleniyor
+             store.Tickets.Remove(ticket);
+             SaveData();
+             return true;
         }
     }
 }

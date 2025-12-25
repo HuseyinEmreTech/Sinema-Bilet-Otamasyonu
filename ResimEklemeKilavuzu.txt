@@ -1,0 +1,45 @@
+VISUAL STUDIO ÜZERİNDEN PROJEYE RESİM EKLEME VE GÜNCELLEME REHBERİ
+===================================================================
+
+Bu rehber, projenize film posterlerini eklemeniz ve uygulamanın bu resimleri tanıması için izlemeniz gereken adımları içerir.
+
+1. ADIM: Resources (Kaynaklar) Alanını Açma
+--------------------------------------------
+1. Visual Studio'da sağ taraftaki "Solution Explorer" (Çözüm Gezgini) panelini kullanın.
+2. "Properties" (Özellikler) klasörünü bulun ve üzerine çift tıklayın. (Veya projeye sağ tıklayıp Özellikler deyin).
+3. Açılan pencerede sol menüden "Resources" (Kaynaklar) sekmesine tıklayın.
+4. Üst menüde "Strings" (Dizeler) yazıyorsa, yanındaki oka tıklayıp "Images" (Görüntüler) seçeneğini seçin.
+
+2. ADIM: Resimleri Ekleme
+-------------------------
+1. İnternetten indirdiğiniz film posterlerini bilgisayarınızda bir klasöre toplayın.
+2. Bu resim dosyalarını sürükleyip Visual Studio'daki açık olan Resources ekranına bırakın.
+   - Alternatif: Resources ekranında sol üstte "Add Resource" (Kaynak Ekle) -> "Add Existing File" (Mevcut Dosya Ekle) diyerek dosyaları seçebilirsiniz.
+
+3. ADIM: İsimlendirme (ÖNEMLİ)
+------------------------------
+Kod tarafında resimlerin eşleşmesi için resimlerin isimleri (Resource Name) ile `DatabaseHelper.cs` dosyasındaki `ImagePath` değerleri AYNİ OLMALIDIR.
+
+Eklediğiniz resimlere sağ tıklayıp "Rename" (Yeniden Adlandır) diyerek aşağıdaki isimleri verin:
+
+| Film Adı                               | Resim Adı (Resource Name) |
+|----------------------------------------|---------------------------|
+| Avatar: Su Yolu                        | avatar2                   |
+| Hızlı ve Öfkeli 10                     | fastx                     |
+| Barbie                                 | barbie                    |
+| Oppenheimer                            | oppenheimer               |
+| Örümcek-Adam: Örümcek Evrenine Geçiş   | spiderman                 |
+| John Wick 4                            | johnwick4                 |
+| Görevimiz Tehlike 7                    | mi7                       |
+| Transformers: Canavarların Yükselişi   | transformers              |
+| Galaksinin Koruyucuları 3              | gotg3                     |
+| The Flash                              | flash                     |
+| Dune: Çöl Gezegeni Bölüm İki           | dune2                     |
+
+*Not: Dosya uzantısı (.jpg, .png) önemli değildir, sadece ismin doğru olması yeterlidir.*
+
+4. ADIM: Kaydetme ve Çalıştırma
+-------------------------------
+1. Resources ekranını kapatırken veya `Ctrl + S` yaparak değişiklikleri kaydedin.
+2. Projeyi yeniden çalıştırın. (`Start` veya `F5`).
+3. Artık film kartlarında "POSTER" yazısı yerine eklediğiniz resimlerin göründüğünü göreceksiniz. Resim eklemediğiniz filmlerde "POSTER" yazısı kalmaya devam eder.

@@ -1,0 +1,43 @@
+SİNEMA BİLET OTOMASYONU - KULLANMA KILAVUZU
+=============================================
+
+Merhaba! Bu proje, modern bir sinema bilet satış sistemidir. Aşağıda uygulamanın nasıl kullanılacağına dair adımları bulabilirsiniz.
+
+1. BAŞLANGIÇ
+------------
+Uygulamayı çalıştırdığınızda (SinemaBiletOtomasyonu.exe), sizi şık bir "Hoş Geldiniz" ekranı karşılar ve ardından ana menüye yönlendirilirsiniz.
+
+2. FİLM SEÇİMİ VE BİLET ALMA (MÜŞTERİ MODU)
+-------------------------------------------
+- Ana ekranda vizyondaki filmlerin posterleri ve bilgileri listelenir.
+- Bilet almak istediğiniz filmin üzerine tıklayın.
+- **Koltuk Seçimi:**
+  - Açılan ekranda "Salon" ve "Seans" (Saat) seçimi yapın.
+  - Koltuk düzeni ekrana gelecektir.
+  - *Not: Eğer koltukların tamamını göremiyorsanız, panelin sağ tarafındaki kaydırma çubuğunu aşağı indirin.*
+  - Boş koltuklar (Beyaz/Gri) seçilebilir. Dolu koltuklar (Kırmızı) seçilemez.
+  - İstediğiniz koltuklara tıklayarak seçin (Yeşil olur).
+  - Sağ altta "Ödemeye Geç" butonuna basın.
+- **Ödeme Ekranı:**
+  - Adınızı ve Soyadınızı girin.
+  - Eğer öğrenciyseniz "Öğrenci İndirimi" kutucuğunu işaretleyin (%20 indirim).
+  - Eğer seans 14:00'dan önceyse, otomatik "Matine İndirimi" (%10) uygulanır.
+  - "Ödemeyi Onayla" butonuna basarak bileti alın.
+
+3. YÖNETİCİ PANELİ (ADMIN MODU)
+-------------------------------
+- Ana ekranın sağ üst köşesindeki "Yönetici" butonuna tıklayın.
+- **Giriş Bilgileri:**
+  - Kullanıcı Adı: admin
+  - Şifre: 1234
+- **Panel Özellikleri:**
+  - **Film Yönetimi:** "Yeni Film Ekle" butonu ile sisteme yeni film ekleyebilirsiniz (Ad, Tür, Süre, Fiyat, Resim). Listeden seçip "Sil" diyerek filmi kaldırabilirsiniz.
+  - **Raporlar:** Toplam hasılatı, satılan bilet sayısını ve en popüler filmi görebilirsiniz.
+
+4. TEKNİK BİLGİLER VE KURULUM
+-----------------------------
+- Proje C# ve .NET Framework kullanılarak geliştirilmiştir.
+- Veriler "cinema-data.xml" dosyasında tutulur. Bu dosyayı silerseniz veriler sıfırlanır.
+- Film resimleri için "ResimEklemeKilavuzu.txt" dosyasını okuyun.
+
+İyi Seyirler!

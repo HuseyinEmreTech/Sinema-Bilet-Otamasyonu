@@ -4,210 +4,127 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using SinemaBiletOtomasyonu.Database;
 using SinemaBiletOtomasyonu.Models;
+using SinemaBiletOtomasyonu.Controls;
+using SinemaBiletOtomasyonu.Helpers;
 using System.Collections.Generic;
+
 namespace SinemaBiletOtomasyonu.Forms
 {
     public partial class MainForm : Form
     {
         private List<Film> films;
+        private FlowLayoutPanel flowPanel;
+
         public MainForm()
         {
             InitializeComponent();
+            this.DoubleBuffered = true; // Titremeyi önlemek için
+            ModernUIHelper.ApplyTheme(this); // Modern temayı uygula
+            InitializeCustomComponents(); // Özel bileşenleri (Admin butonu vb.) yükle
             this.Load += MainForm_Load;
-            this.Paint += MainForm_Paint;
-
-            // Double buffering - titreme önleme
-            this.DoubleBuffered = true;
         }
+
+        private void InitializeCustomComponents()
+        {
+            // FlowLayoutPanel ayarları
+            flowPanel = new FlowLayoutPanel();
+            flowPanel.Dock = DockStyle.Fill;
+            flowPanel.AutoScroll = true;
+            // Top padding increased to avoid overlap with Label
+            flowPanel.Padding = new Padding(20, 80, 20, 20);
+            flowPanel.BackColor = Color.Transparent;
+            
+            // flowPanel.Margin useless with Dock.Fill 
+            
+            // Mevcut dgvFilms'i kaldır (Designer'da var ama kullanmıyoruz)
+            this.Controls.Remove(dgvFilms);
+            
+            // Paneli ekle
+            this.Controls.Add(flowPanel);
+            
+            // Butonları ve başlığı en öne getir
+            if(Controls.Contains(lblTitle)) this.Controls.SetChildIndex(lblTitle, 0);
+
+            // Admin Button
+            Button btnAdmin = new Button();
+            btnAdmin.Text = "Yönetici";
+            btnAdmin.Size = new Size(80, 30);
+            btnAdmin.Location = new Point(this.ClientSize.Width - 100, 20);
+            btnAdmin.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnAdmin.FlatStyle = FlatStyle.Flat;
+            btnAdmin.FlatAppearance.BorderSize = 0;
+            btnAdmin.BackColor = Color.Transparent; // Şeffaf
+            btnAdmin.ForeColor = Color.Gray;
+            btnAdmin.Cursor = Cursors.Hand;
+            btnAdmin.Click += (s, e) => {
+                AdminLoginForm login = new AdminLoginForm();
+                login.ShowDialog();
+                // Refresh films after admin closes (if added new film)
+                LoadFilms();
+            };
+            this.Controls.Add(btnAdmin);
+            this.Controls.SetChildIndex(btnAdmin, 0);
+            
+            // Buton stillerini güncelle
+        }
+
+        private void StyleButton(Button btn, Color color)
+        {
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderSize = 0;
+            btn.BackColor = Color.FromArgb(40, color);
+            btn.ForeColor = Color.White;
+            btn.Font = new Font("Segoe UI", 11, FontStyle.Bold);
+            btn.Paint += (s, e) =>
+            {
+                // Özel yuvarlak çizim
+                Rectangle rect = btn.ClientRectangle;
+                rect.Inflate(-2, -2);
+                ModernUIHelper.DrawGlassPanel(e.Graphics, rect, 20);
+                
+                TextRenderer.DrawText(e.Graphics, btn.Text, btn.Font, rect, btn.ForeColor, 
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            };
+        }
+
         private void MainForm_Load(object sender, EventArgs e)
         {
             LoadFilms();
+        }
 
-            // Fade-in animasyonu
-            this.Opacity = 0;
-            Timer fadeTimer = new Timer();
-            fadeTimer.Interval = 30;
-            fadeTimer.Tick += (s, args) =>
-            {
-                if (this.Opacity < 1)
-                    this.Opacity += 0.05;
-                else
-                    fadeTimer.Stop();
-            };
-            fadeTimer.Start();
-        }
-        private void MainForm_Paint(object sender, PaintEventArgs e)
-        {
-            // Gradient arka plan
-            LinearGradientBrush brush = new LinearGradientBrush(
-                this.ClientRectangle,
-                Color.FromArgb(26, 26, 46),    // #1A1A2E
-                Color.FromArgb(15, 52, 96),    // #0F3460
-                90F);
-            e.Graphics.FillRectangle(brush, this.ClientRectangle);
-        }
+        // Filmleri veritabanından çeker ve ekranda listeler
         private void LoadFilms()
         {
             films = DatabaseHelper.GetAllFilms();
-            dgvFilms.DataSource = films;
-            // DataGridView düzenleme
-            dgvFilms.BackgroundColor = Color.FromArgb(236, 240, 241);
-            dgvFilms.BorderStyle = BorderStyle.None;
-            dgvFilms.DefaultCellStyle.SelectionBackColor = Color.FromArgb(233, 69, 96);
-            dgvFilms.DefaultCellStyle.SelectionForeColor = Color.White;
-            dgvFilms.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(26, 26, 46);
-            dgvFilms.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dgvFilms.EnableHeadersVisualStyles = false;
+            flowPanel.Controls.Clear(); // Önceki listeyi temizle
 
-            // Sütun başlıklarını Türkçeleştir
-            dgvFilms.Columns["FilmId"].Visible = false;
-            dgvFilms.Columns["ImagePath"].Visible = false;
-            dgvFilms.Columns["FilmName"].HeaderText = "Film Adı";
-            dgvFilms.Columns["Genre"].HeaderText = "Tür";
-            dgvFilms.Columns["Duration"].HeaderText = "Süre (dk)";
-            dgvFilms.Columns["Price"].HeaderText = "Fiyat (₺)";
-
-            dgvFilms.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        }
-        private void btnBuyTicket_Click(object sender, EventArgs e)
-        {
-            if (dgvFilms.SelectedRows.Count == 0)
+            foreach (var film in films)
             {
-                MessageBox.Show("Lütfen bir film seçin!", "Uyarı",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                // Her film için özel bir kart oluştur
+                FilmCard card = new FilmCard(film);
+                card.CardClick += FilmCard_Click; // Tıklama olayını bağla
+                flowPanel.Controls.Add(card);
             }
-            int selectedFilmId = Convert.ToInt32(dgvFilms.SelectedRows[0].Cells["FilmId"].Value);
-
-            // Koltuk seçim formuna geç
-            SeatSelectionForm seatForm = new SeatSelectionForm(selectedFilmId);
-            seatForm.ShowDialog();
-
-            // Form kapandıktan sonra listeyi yenile
-            LoadFilms();
         }
-        private void btnCancelTicket_Click(object sender, EventArgs e)
+
+        private void FilmCard_Click(object sender, EventArgs e)
         {
-            CancelTicketForm cancelForm = new CancelTicketForm();
-            cancelForm.ShowDialog();
+            FilmCard card = sender as FilmCard;
+            if (card != null)
+            {
+                // Koltuk seçim formuna geç
+                SeatSelectionForm seatForm = new SeatSelectionForm(card.FilmData.FilmId);
+                seatForm.ShowDialog();
+                // Geri dönünce belki yenileme gerekebilir
+            }
         }
-        private void InitializeComponent()
-        {
-            this.dgvFilms = new System.Windows.Forms.DataGridView();
-            this.btnBuyTicket = new System.Windows.Forms.Button();
-            this.btnCancelTicket = new System.Windows.Forms.Button();
-            this.lblTitle = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvFilms)).BeginInit();
-            this.SuspendLayout();
 
-            // 
-            // dgvFilms
-            // 
-            this.dgvFilms.AllowUserToAddRows = false;
-            this.dgvFilms.AllowUserToDeleteRows = false;
-            this.dgvFilms.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvFilms.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvFilms.Location = new System.Drawing.Point(30, 80);
-            this.dgvFilms.MultiSelect = false;
-            this.dgvFilms.Name = "dgvFilms";
-            this.dgvFilms.ReadOnly = true;
-            this.dgvFilms.RowHeadersWidth = 51;
-            this.dgvFilms.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvFilms.Size = new System.Drawing.Size(740, 330);
-            this.dgvFilms.TabIndex = 0;
+        // btnBuyTicket removed from code logic since it is not used in the new flow
+        // private void btnBuyTicket_Click(object sender, EventArgs e) {} 
+        // private void btnBuyTicket_MouseEnter(object sender, EventArgs e) {}
+        // private void btnBuyTicket_MouseLeave(object sender, EventArgs e) {}
 
-            // 
-            // btnBuyTicket
-            // 
-            this.btnBuyTicket.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBuyTicket.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(233)))), ((int)(((byte)(69)))), ((int)(((byte)(96)))));
-            this.btnBuyTicket.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnBuyTicket.FlatAppearance.BorderSize = 0;
-            this.btnBuyTicket.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBuyTicket.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnBuyTicket.ForeColor = System.Drawing.Color.White;
-            this.btnBuyTicket.Location = new System.Drawing.Point(550, 430);
-            this.btnBuyTicket.Name = "btnBuyTicket";
-            this.btnBuyTicket.Size = new System.Drawing.Size(220, 50);
-            this.btnBuyTicket.TabIndex = 1;
-            this.btnBuyTicket.Text = "🎬 Bilet Al";
-            this.btnBuyTicket.UseVisualStyleBackColor = false;
-            this.btnBuyTicket.Click += new System.EventHandler(this.btnBuyTicket_Click);
-            this.btnBuyTicket.MouseEnter += new System.EventHandler(this.btnBuyTicket_MouseEnter);
-            this.btnBuyTicket.MouseLeave += new System.EventHandler(this.btnBuyTicket_MouseLeave);
-
-            // 
-            // btnCancelTicket
-            // 
-            this.btnCancelTicket.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnCancelTicket.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(52)))), ((int)(((byte)(96)))));
-            this.btnCancelTicket.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnCancelTicket.FlatAppearance.BorderSize = 0;
-            this.btnCancelTicket.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCancelTicket.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnCancelTicket.ForeColor = System.Drawing.Color.White;
-            this.btnCancelTicket.Location = new System.Drawing.Point(30, 430);
-            this.btnCancelTicket.Name = "btnCancelTicket";
-            this.btnCancelTicket.Size = new System.Drawing.Size(220, 50);
-            this.btnCancelTicket.TabIndex = 2;
-            this.btnCancelTicket.Text = "❌ Bilet İptal";
-            this.btnCancelTicket.UseVisualStyleBackColor = false;
-            this.btnCancelTicket.Click += new System.EventHandler(this.btnCancelTicket_Click);
-            this.btnCancelTicket.MouseEnter += new System.EventHandler(this.btnCancel_MouseEnter);
-            this.btnCancelTicket.MouseLeave += new System.EventHandler(this.btnCancel_MouseLeave);
-
-            // 
-            // lblTitle
-            // 
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.BackColor = System.Drawing.Color.Transparent;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 24F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.White;
-            this.lblTitle.Location = new System.Drawing.Point(22, 20);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(450, 45);
-            this.lblTitle.TabIndex = 3;
-            this.lblTitle.Text = "🎬 Sinema Bilet Otomasyonu";
-
-            // 
-            // MainForm
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 500);
-            this.Controls.Add(this.lblTitle);
-            this.Controls.Add(this.btnCancelTicket);
-            this.Controls.Add(this.btnBuyTicket);
-            this.Controls.Add(this.dgvFilms);
-            this.MinimumSize = new System.Drawing.Size(800, 500);
-            this.Name = "MainForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Sinema Bilet Sistemi";
-            ((System.ComponentModel.ISupportInitialize)(this.dgvFilms)).EndInit();
-            this.ResumeLayout(false);
-            this.PerformLayout();
-        }
-        private void btnBuyTicket_MouseEnter(object sender, EventArgs e)
-        {
-            btnBuyTicket.BackColor = Color.FromArgb(255, 89, 116); // Daha açık
-        }
-        private void btnBuyTicket_MouseLeave(object sender, EventArgs e)
-        {
-            btnBuyTicket.BackColor = Color.FromArgb(233, 69, 96); // Orijinal
-        }
-        private void btnCancel_MouseEnter(object sender, EventArgs e)
-        {
-            btnCancelTicket.BackColor = Color.FromArgb(35, 72, 116); // Daha açık
-        }
-        private void btnCancel_MouseLeave(object sender, EventArgs e)
-        {
-            btnCancelTicket.BackColor = Color.FromArgb(15, 52, 96); // Orijinal
-        }
-        private System.Windows.Forms.DataGridView dgvFilms;
-        private System.Windows.Forms.Button btnBuyTicket;
-        private System.Windows.Forms.Button btnCancelTicket;
-        private System.Windows.Forms.Label lblTitle;
+        // Designer generated code overrides için, InitializeComponent'i elle değiştirmiyoruz
+        // Sadece form yüklendiğinde arayüzü manipüle ediyoruz.
     }
 }
