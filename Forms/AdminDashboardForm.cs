@@ -335,7 +335,7 @@ namespace SinemaBiletOtomasyonu.Forms
             dgvHalls.DataSource = null;
             dgvHalls.DataSource = DatabaseHelper.GetAllHalls();
             // Also refresh sessions tab comboboxes because halls might have changed
-            if (cmbHalls != null) RefreshSessionList();
+            if (cmbHalls != null && cmbHalls.IsHandleCreated) RefreshSessionList();
         }
 
         private void BtnAddHall_Click(object sender, EventArgs e)

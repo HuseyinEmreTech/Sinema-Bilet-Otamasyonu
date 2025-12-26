@@ -17,15 +17,17 @@ namespace SinemaBiletOtomasyonu.Forms
 
         public MainForm()
         {
-            // Arka plan resmi eklemek isterseniz aşağıdaki satırı aktifleştirin
-            // this.BackgroundImage = ImageHelper.LoadImage("main_bg"); // main_bg isminde bir resmi Resources'a eklemelisiniz
-            // this.BackgroundImageLayout = ImageLayout.Stretch;
-
             InitializeComponent();
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            
             this.DoubleBuffered = true; 
             ModernUIHelper.ApplyTheme(this); 
             InitializeCustomComponents(); 
-            this.Load += MainForm_Load;
+            LoadFilms();
         }
 
         private void InitializeCustomComponents()
@@ -91,10 +93,6 @@ namespace SinemaBiletOtomasyonu.Forms
             };
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-            LoadFilms();
-        }
 
         // Filmleri veritabanından çeker ve ekranda listeler
         private void LoadFilms()
