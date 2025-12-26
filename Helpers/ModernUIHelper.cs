@@ -18,11 +18,14 @@ namespace SinemaBiletOtomasyonu.Helpers
         public static void ApplyTheme(Form form)
         {
             form.BackColor = DarkBackground;
-            // Gradient kaldırıldı, düz renk
-            form.Paint += (s, e) =>
+            // BackgroundImage varsa Paint ile temizleme yapılmasın
+            if (form.BackgroundImage == null)
             {
-               e.Graphics.Clear(DarkBackground);
-            };
+                form.Paint += (s, e) =>
+                {
+                   e.Graphics.Clear(DarkBackground);
+                };
+            }
         }
 
         public static GraphicsPath GetRoundedPath(Rectangle rect, int radius)
