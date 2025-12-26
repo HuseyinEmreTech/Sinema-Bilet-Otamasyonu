@@ -25,6 +25,13 @@ namespace SinemaBiletOtomasyonu.Forms
             base.OnLoad(e);
             
             this.DoubleBuffered = true; 
+
+            // Formun arka plan resmini ayarlamak için aşağıdaki satırları kullanabilirsiniz:
+            // 1. Resminizi projenin /bin/Debug/Images/ klasörüne kopyalayın.
+            // 2. Aşağıdaki satırı kendi resim adınızla güncelleyip yorum satırından çıkarın:
+            // this.BackgroundImage = ImageHelper.LoadImage("arkaplan.jpg");
+            // this.BackgroundImageLayout = ImageLayout.Stretch;
+
             ModernUIHelper.ApplyTheme(this); 
             InitializeCustomComponents(); 
             LoadFilms();
