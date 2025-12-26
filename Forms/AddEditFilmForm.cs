@@ -39,7 +39,6 @@ namespace SinemaBiletOtomasyonu.Forms
             this.MaximizeBox = false;
 
             int y = 20;
-            int lblW = 100;
             int inputW = 300;
             int gap = 40;
 

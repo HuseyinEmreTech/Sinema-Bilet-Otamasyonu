@@ -16,7 +16,6 @@ namespace SinemaBiletOtomasyonu.Forms
         private List<int> seatIds;
         private decimal totalPrice;
         private CheckBox chkStudent;
-        private Label lblTotal;
         public int SessionId { get; set; } // Property olarak eklendi
         public PaymentForm(int filmId, int hallId, List<int> seatIds, decimal totalPrice, int sessionId)
         {
@@ -86,20 +85,9 @@ namespace SinemaBiletOtomasyonu.Forms
 
             txtCustomerName.Location = new Point(50, startY + 25);
             txtCustomerName.Width = 300;
-            
-            // CheckBox re-position
-            chkStudent.Location = new Point(50, startY + 65);
-
-            // Button re-position
-            btnConfirmPayment.Location = new Point(50, startY + 110);
-            btnConfirmPayment.Size = new Size(180, 45);
-            
-            btnCancel.Location = new Point(250, startY + 110);
-            btnCancel.Size = new Size(100, 45);
-
             // Input Stili
-            txtCustomerName.BorderStyle = BorderStyle.FixedSingle; // Çerçeve olsun
-            txtCustomerName.BackColor = Color.FromArgb(50, 50, 50); // Daha açık bir ton
+            txtCustomerName.BorderStyle = BorderStyle.FixedSingle; 
+            txtCustomerName.BackColor = Color.FromArgb(50, 50, 50); 
             txtCustomerName.ForeColor = Color.White;
             txtCustomerName.Font = new Font("Segoe UI", 12, FontStyle.Regular);
             
@@ -108,10 +96,17 @@ namespace SinemaBiletOtomasyonu.Forms
             chkStudent.Text = "Öğrenci İndirimi (%20)";
             chkStudent.ForeColor = Color.White;
             chkStudent.Font = new Font("Segoe UI", 10);
-            chkStudent.Location = new Point(txtCustomerName.Left, txtCustomerName.Bottom + 10);
+            chkStudent.Location = new Point(50, startY + 65);
             chkStudent.AutoSize = true;
             chkStudent.CheckedChanged += (s, args) => CalculatePrice();
             this.Controls.Add(chkStudent);
+
+            // Button re-position
+            btnConfirmPayment.Location = new Point(50, startY + 110);
+            btnConfirmPayment.Size = new Size(180, 45);
+            
+            btnCancel.Location = new Point(250, startY + 110);
+            btnCancel.Size = new Size(100, 45);
 
             CalculatePrice(); // İlk hesaplama
 

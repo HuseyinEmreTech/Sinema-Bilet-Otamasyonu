@@ -27,8 +27,6 @@ namespace SinemaBiletOtomasyonu.Forms
         private Button btnAddSession;
         private Button btnDeleteSession;
 
-        private Label lblTotalRevenue;
-
         public AdminDashboardForm()
         {
             this.Text = "Yönetici Paneli";
