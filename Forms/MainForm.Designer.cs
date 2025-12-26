@@ -1,6 +1,6 @@
-namespace SinemaBiletOtomasyonu.Forms
+﻿namespace SinemaBiletOtomasyonu.Forms
 {
-    partial class MainForm
+    public partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -70,6 +70,6 @@ namespace SinemaBiletOtomasyonu.Forms
         #endregion
 
         private System.Windows.Forms.Label lblTitle;
-        private System.Windows.Forms.DataGridView dgvFilms; // Code-behind removes this
+        private System.Windows.Forms.DataGridView dgvFilms;
     }
 }
