@@ -106,20 +106,44 @@ namespace SinemaBiletOtomasyonu.Forms
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             
-            int screenWidth = 400;
-            int screenHeight = 6;
-            int x = (this.ClientSize.Width - screenWidth) / 2;
-            int y = 140; 
+            int screenWidth = 200;
+            // int screenHeight = 6; // Unused
+            int x = (panelSeats.Width - screenWidth) / 2 + panelSeats.Left;
+            int y = panelSeats.Top - 30; 
             
-            // Düz Çizgi Perde
-            using (SolidBrush brush = new SolidBrush(Color.FromArgb(100, 100, 100)))
+            // Düz Çizgi Perde (Kavisli yerinde düz daha modern durabilir veya hafif kavis)
+            // Kavisli yapalım
+            using (GraphicsPath screenPath = new GraphicsPath())
             {
-                g.FillRectangle(brush, x, y, screenWidth, screenHeight);
+                screenPath.AddArc(x, y, screenWidth, 20, 180, 180);
+                using (Pen p = new Pen(Color.Gray, 3))
+                {
+                    g.DrawPath(p, screenPath);
+                }
             }
             
-            // Perde Metni
             TextRenderer.DrawText(g, "SAHNE", new Font("Segoe UI", 9, FontStyle.Regular), 
-                new Rectangle(x, y + 10, screenWidth, 20), Color.Gray, TextFormatFlags.HorizontalCenter);
+                new Rectangle(x, y + 15, screenWidth, 20), Color.Gray, TextFormatFlags.HorizontalCenter);
+
+            // LEGEND (Açıklamalar)
+            int ly = cmbSessions.Bottom + 10;
+            int lx = panelSeats.Right - 150;
+            if(lx < panelSeats.Left + 10) lx = panelSeats.Left + 10;
+
+            DrawLegendItem(g, "Boş", ModernUIHelper.SecondaryColor, ref lx, ly);
+            DrawLegendItem(g, "Dolu", Color.FromArgb(192, 57, 43), ref lx, ly);
+            DrawLegendItem(g, "Seçili", ModernUIHelper.PrimaryColor, ref lx, ly);
+        }
+
+        private void DrawLegendItem(Graphics g, string text, Color color, ref int x, int y)
+        {
+            Rectangle rect = new Rectangle(x, y, 20, 20);
+            using (SolidBrush b = new SolidBrush(color))
+            {
+                g.FillEllipse(b, rect);
+            }
+            TextRenderer.DrawText(g, text, new Font("Segoe UI", 8), new Point(x + 25, y + 2), Color.LightGray);
+            x -= 70; // Sola doğru git (yada sağa, layouta göre değişir. Burada Right aligned başladık gibi)
         }
 
         private void cmbHalls_SelectedIndexChanged(object sender, EventArgs e)
@@ -194,7 +218,7 @@ namespace SinemaBiletOtomasyonu.Forms
                     btnSeat.Tag = seat.SeatId;
                     
                     bool isOccupied = occupiedSeatIds.Contains(seat.SeatId);
-                    bool interactionEnabled = !isOccupied; // İptal için: dolu koltuklar da tıklanabilir olsun mu?
+                    // interactionEnabled removed (unused)
                     
                     // Görsel İptal Özelliği: Dolu olanlara da tıklama izni veriyoruz
                     
@@ -311,8 +335,8 @@ namespace SinemaBiletOtomasyonu.Forms
             // PaymentForm'a SessionId eklemeliyiz implementasyon planımda yoktu ama Ticket oluştururken lazım!
             // Ticket oluştururken SessionId lazım.
             int sessionId = (int)cmbSessions.SelectedValue;
-            PaymentForm paymentForm = new PaymentForm(selectedFilmId, hallId, selectedSeatIds, totalPrice);
-            paymentForm.SessionId = sessionId; // Property injection (PaymentForm'a ekleyeceğiz)
+            PaymentForm paymentForm = new PaymentForm(selectedFilmId, hallId, selectedSeatIds, totalPrice, sessionId);
+            // paymentForm.SessionId = sessionId; // Constructor'a taşıdık
             this.Hide();
             paymentForm.ShowDialog();
             this.Close();

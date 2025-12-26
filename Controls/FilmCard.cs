@@ -1,11 +1,16 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Drawing.Drawing2D;
 using SinemaBiletOtomasyonu.Helpers;
 using SinemaBiletOtomasyonu.Models;
 
 namespace SinemaBiletOtomasyonu.Controls
 {
+    /// <summary>
+    /// Filmlerin görsel olarak listelendiği kullanıcı kontrolü.
+    /// Görsel efektler (gölge, animasyon) ve dinamik metin çizimi içerir.
+    /// </summary>
     public partial class FilmCard : UserControl
     {
         public Film FilmData { get; private set; }
@@ -33,65 +38,97 @@ namespace SinemaBiletOtomasyonu.Controls
             base.OnPaint(e);
             Graphics g = e.Graphics;
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            // Hover animasyonu (Hafif büyüme/parlama)
+            // Kart Alanı
             Rectangle rect = this.ClientRectangle;
-            rect.Inflate(-5, -5); // Gölge payı
+            rect.Inflate(-5, -5);
 
-            // Minimalist Hover: Sadece hafif yukarı çıkma veya parlaklık (seçime gerek yok basit)
+            // Hover Efekti: Yukarı çıkma ve Gölge/Parlaklık
             if (isHovered)
             {
-                rect.Y -= 2; // Hafif yukarı
+                rect.Y -= 3; // Yukarı hareket
+                
+                // Arka plan parlaması (Glow)
+                using (SolidBrush shadowBrush = new SolidBrush(Color.FromArgb(30, ModernUIHelper.PrimaryColor)))
+                {
+                   using(GraphicsPath glowInfo = ModernUIHelper.GetRoundedPath(rect, 15))
+                   {
+                       g.FillPath(shadowBrush, glowInfo);
+                   }
+                }
+                // Kenarlık
+                using (Pen p = new Pen(ModernUIHelper.PrimaryColor, 2))
+                {
+                    using(GraphicsPath border = ModernUIHelper.GetRoundedPath(rect, 15))
+                    {
+                        g.DrawPath(p, border);
+                    }
+                }
             }
 
             // Glass Arka Plan
             ModernUIHelper.DrawGlassPanel(g, rect, 15);
 
-            // Resim Alanı (Placeholder) veya Film Resmi
             // Resim Alanı
             Rectangle imgRect = new Rectangle(rect.X + 10, rect.Y + 10, rect.Width - 20, 180);
             
-            // 1. Resource'dan Resmi Çekmeye Çalış
-            Image poster = null;
-            if (!string.IsNullOrEmpty(FilmData.ImagePath))
-            {
-                object obj = Properties.Resources.ResourceManager.GetObject(FilmData.ImagePath);
-                if (obj is Image)
-                {
-                    poster = (Image)obj;
-                }
-            }
+            Image poster = ImageHelper.LoadImage(FilmData.ImagePath);
 
-            if (poster != null)
+            // Resmi Yuvarlak Köşeli Çizme (Clip)
+            using (GraphicsPath imgPath = ModernUIHelper.GetRoundedPath(imgRect, 10))
             {
-                // Resmi sığdırarak çiz
-                g.DrawImage(poster, imgRect);
-            }
-            else
-            {
-                    // Placeholder - Flat Dark
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(40, 40, 40)))
+                g.SetClip(imgPath);
+                if (poster != null)
                 {
-                   g.FillRectangle(brush, imgRect);
+                    g.DrawImage(poster, imgRect);
                 }
-                TextRenderer.DrawText(g, FilmData.FilmName.ToUpper(), new Font("Segoe UI", 10, FontStyle.Bold), imgRect, Color.DarkGray, 
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
+                else
+                {
+                    using (SolidBrush brush = new SolidBrush(Color.FromArgb(40, 40, 40)))
+                    {
+                        g.FillRectangle(brush, imgRect);
+                    }
+                    TextRenderer.DrawText(g, FilmData.FilmName.ToUpper(), new Font("Segoe UI", 10, FontStyle.Bold), imgRect, Color.DarkGray, 
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
+                }
+                g.ResetClip();
             }
             
-            // Film Bilgileri
-            // Başlık
-            Rectangle titleRect = new Rectangle(rect.X + 10, imgRect.Bottom + 10, rect.Width - 20, 20);
-            // Hover durumunda başlık rengi değişsin
+            // Fiyat Etiketi (Sol Üst Köşe - Resmin Üstüne)
+            Rectangle priceRect = new Rectangle(imgRect.Right - 60, imgRect.Top + 10, 50, 25);
+            using(GraphicsPath pricePath = ModernUIHelper.GetRoundedPath(priceRect, 5))
+            {
+                using(SolidBrush pBrush = new SolidBrush(ModernUIHelper.PrimaryColor))
+                {
+                    g.FillPath(pBrush, pricePath);
+                }
+                TextRenderer.DrawText(g, $"{FilmData.Price:0} TL", new Font("Segoe UI", 9, FontStyle.Bold), priceRect, Color.White, 
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+
+
+            // Film Başlığı - Multi-line & Auto-size Logic
+            Rectangle titleRect = new Rectangle(rect.X + 5, imgRect.Bottom + 10, rect.Width - 10, 45); // Yüksekliği artırdık
             Color titleColor = isHovered ? ModernUIHelper.PrimaryColor : Color.White;
             
-            TextRenderer.DrawText(g, FilmData.FilmName, new Font("Segoe UI", 10, FontStyle.Bold), titleRect, titleColor,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+            // Font küçültme mantığı (Basit)
+            Font titleFont = new Font("Segoe UI", 11, FontStyle.Bold);
+            if(FilmData.FilmName.Length > 25) titleFont = new Font("Segoe UI", 9, FontStyle.Bold);
+            
+            TextRenderer.DrawText(g, FilmData.FilmName, titleFont, titleRect, titleColor,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.WordBreak); // WordBreak ekledik
 
-            // Tür ve Fiyat
-            Rectangle infoRect = new Rectangle(rect.X + 10, titleRect.Bottom + 5, rect.Width - 20, 40);
-            string info = $"{FilmData.Genre}";
-            TextRenderer.DrawText(g, info, new Font("Segoe UI", 8), infoRect, Color.Gray,
+            // Tür
+            Rectangle genreRect = new Rectangle(rect.X + 5, titleRect.Bottom + 2, rect.Width - 10, 20);
+            TextRenderer.DrawText(g, FilmData.Genre, new Font("Segoe UI", 8, FontStyle.Regular), genreRect, Color.Gray,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.Top);
+                
+            // Süre butonu/ikonu benzeri bilgi
+            Rectangle durRect = new Rectangle(rect.X + 5, genreRect.Bottom + 0, rect.Width - 10, 20);
+            TextRenderer.DrawText(g, $"{FilmData.Duration} dk", new Font("Segoe UI", 8, FontStyle.Regular), durRect, Color.DarkGray,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.Top);
+
         }
     }
 }

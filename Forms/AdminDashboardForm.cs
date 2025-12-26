@@ -66,24 +66,46 @@ namespace SinemaBiletOtomasyonu.Forms
 
         private void InitializeFilmsTab()
         {
-            // Grid
+            // Grid Styling
             dgvFilms = new DataGridView();
             dgvFilms.Location = new Point(20, 20);
-            dgvFilms.Size = new Size(720, 450);
+            dgvFilms.Size = new Size(740, 450);
             dgvFilms.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvFilms.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvFilms.BackgroundColor = Color.FromArgb(40,40,40);
-            dgvFilms.ForeColor = Color.Black; 
+            dgvFilms.BackgroundColor = ModernUIHelper.PanelBackground;
+            dgvFilms.BorderStyle = BorderStyle.None;
+            dgvFilms.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvFilms.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            dgvFilms.RowHeadersVisible = false;
+            
+            // Header Style
+            dgvFilms.EnableHeadersVisualStyles = false;
+            dgvFilms.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(45, 45, 48);
+            dgvFilms.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dgvFilms.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            dgvFilms.ColumnHeadersHeight = 40;
+
+            // Row Style
+            dgvFilms.DefaultCellStyle.BackColor = Color.FromArgb(30, 30, 30);
+            dgvFilms.DefaultCellStyle.ForeColor = Color.WhiteSmoke;
+            dgvFilms.DefaultCellStyle.SelectionBackColor = ModernUIHelper.PrimaryColor;
+            dgvFilms.DefaultCellStyle.SelectionForeColor = Color.White;
+            dgvFilms.DefaultCellStyle.Font = new Font("Segoe UI", 10);
+            dgvFilms.RowTemplate.Height = 35;
+            dgvFilms.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(35, 35, 35);
+
             tabFilms.Controls.Add(dgvFilms);
             
             RefreshFilmList();
 
             // Buttons
-            btnAddFilm = new Button { Text = "Yeni Film Ekle", Location = new Point(20, 490), Size = new Size(150, 40), BackColor = ModernUIHelper.PrimaryColor, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            btnAddFilm = new Button { Text = " + YENİ FİLM", Location = new Point(20, 490), Size = new Size(180, 45), BackColor = ModernUIHelper.PrimaryColor, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Cursor = Cursors.Hand };
+            btnAddFilm.FlatAppearance.BorderSize = 0;
             btnAddFilm.Click += BtnAddFilm_Click;
             tabFilms.Controls.Add(btnAddFilm);
             
-            btnDeleteFilm = new Button { Text = "Seçili Filmi Sil", Location = new Point(190, 490), Size = new Size(150, 40), BackColor = Color.DarkRed, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            btnDeleteFilm = new Button { Text = "SİL", Location = new Point(220, 490), Size = new Size(120, 45), BackColor = Color.FromArgb(200, 50, 50), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Cursor = Cursors.Hand };
+            btnDeleteFilm.FlatAppearance.BorderSize = 0;
             btnDeleteFilm.Click += BtnDeleteFilm_Click;
             tabFilms.Controls.Add(btnDeleteFilm);
         }
@@ -132,25 +154,14 @@ namespace SinemaBiletOtomasyonu.Forms
 
         private void BtnAddFilm_Click(object sender, EventArgs e)
         {
-            // Basit Input Dialogları ile Film Ekle
-            string name = Microsoft.VisualBasic.Interaction.InputBox("Film Adı:", "Yeni Film", "Yeni Film");
-            if(string.IsNullOrWhiteSpace(name)) return;
-            
-            string genre = Microsoft.VisualBasic.Interaction.InputBox("Tür:", "Yeni Film", "Aksiyon");
-            string durStr = Microsoft.VisualBasic.Interaction.InputBox("Süre (dk):", "Yeni Film", "120");
-            string priceStr = Microsoft.VisualBasic.Interaction.InputBox("Fiyat:", "Yeni Film", "80");
-            string img = Microsoft.VisualBasic.Interaction.InputBox("Resim Adı (Resource):", "Yeni Film", "placeholder"); // Basitçe
-
-            if(int.TryParse(durStr, out int duration) && decimal.TryParse(priceStr, out decimal price))
+            using (AddEditFilmForm form = new AddEditFilmForm())
             {
-                Film f = new Film { FilmName = name, Genre = genre, Duration = duration, Price = price, ImagePath = img };
-                DatabaseHelper.AddFilm(f);
-                RefreshFilmList();
-                MessageBox.Show("Film Eklendi!");
-            }
-            else
-            {
-                MessageBox.Show("Hatalı giriş!");
+                if(form.ShowDialog() == DialogResult.OK)
+                {
+                    DatabaseHelper.AddFilm(form.RESULT_FILM);
+                    RefreshFilmList();
+                    MessageBox.Show("Film Başarıyla Eklendi!");
+                }
             }
         }
 

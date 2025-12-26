@@ -56,6 +56,9 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Database\DatabaseHelper.cs" />
+    <Compile Include="Forms\AddEditFilmForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\AdminDashboardForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -83,6 +86,7 @@
     <Compile Include="Forms\WelcomeForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Helpers\ImageHelper.cs" />
     <Compile Include="Helpers\ModernUIHelper.cs" />
     <Compile Include="Models\Film.cs" />
     <Compile Include="Models\Hall.cs" />

@@ -18,7 +18,7 @@ namespace SinemaBiletOtomasyonu.Forms
         private CheckBox chkStudent;
         private Label lblTotal;
         public int SessionId { get; set; } // Property olarak eklendi
-        public PaymentForm(int filmId, int hallId, List<int> seatIds, decimal totalPrice)
+        public PaymentForm(int filmId, int hallId, List<int> seatIds, decimal totalPrice, int sessionId)
         {
             InitializeComponent();
             this.DoubleBuffered = true;
@@ -26,6 +26,7 @@ namespace SinemaBiletOtomasyonu.Forms
             this.hallId = hallId;
             this.seatIds = seatIds;
             this.totalPrice = totalPrice;
+            this.SessionId = sessionId;
             
             ModernUIHelper.ApplyTheme(this);
             this.Load += PaymentForm_Load;
@@ -36,9 +37,66 @@ namespace SinemaBiletOtomasyonu.Forms
         {
             Film film = DatabaseHelper.GetFilmById(filmId);
             Hall hall = DatabaseHelper.GetHallById(hallId);
-            lblFilmInfo.Text = $"Film: {film.FilmName}\nSalon: {hall.HallName}\nKoltuk Sayısı: {seatIds.Count}";
-            lblTotalPrice.Text = $"{totalPrice:C}";
+
+            // Receipt Panel (Bilet Kartı Görünümü)
+            Panel pnlReceipt = new Panel();
+            pnlReceipt.Location = new Point(50, 20);
+            pnlReceipt.Size = new Size(400, 160);
+            pnlReceipt.BackColor = Color.Transparent; // Paint ile çizeceğiz
+            pnlReceipt.Paint += (s, ev) => 
+            {
+                Graphics g = ev.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                Rectangle rect = pnlReceipt.ClientRectangle;
+                rect.Inflate(-2,-2);
+                
+                // Kağıt Görünümü (Hafif Sarımtırak veya Beyaz)
+                using (SolidBrush paperBrush = new SolidBrush(Color.FromArgb(240, 240, 240)))
+                {
+                   using (GraphicsPath path = ModernUIHelper.GetRoundedPath(rect, 5))
+                   {
+                       g.FillPath(paperBrush, path);
+                   }
+                }
+                
+                // Tırtıklı Çizgi (Makas İzi)
+                using (Pen pen = new Pen(Color.Gray, 2) { DashStyle = DashStyle.Dash })
+                {
+                    g.DrawLine(pen, 10, 110, rect.Width - 10, 110);
+                }
+                
+                // Film Bilgisi
+                TextRenderer.DrawText(g, film.FilmName.ToUpper(), new Font("Segoe UI", 12, FontStyle.Bold), new Point(20, 15), Color.Black);
+                TextRenderer.DrawText(g, $"{hall.HallName} | {seatIds.Count} Koltuk", new Font("Segoe UI", 10), new Point(20, 45), Color.DarkGray);
+                
+                // Fiyat
+                TextRenderer.DrawText(g, "TOPLAM TUTAR", new Font("Segoe UI", 8), new Point(20, 120), Color.Gray);
+                TextRenderer.DrawText(g, $"{totalPrice:C}", new Font("Segoe UI", 14, FontStyle.Bold), new Point(20, 135), ModernUIHelper.PrimaryColor);
+            };
+            this.Controls.Add(pnlReceipt);
             
+            // Labels (artık gereksiz ama kod çökmesin diye gizleyebiliriz veya kaldırabiliriz)
+            lblFilmInfo.Visible = false;
+            lblTotalPrice.Visible = false; 
+            
+            // Input Stili (Receipt altına taşı)
+            int startY = 200;
+            Label lblName = new Label { Text = "Müşteri Adı Soyadı:", ForeColor = Color.LightGray, Location = new Point(50, startY), AutoSize = true, Font = new Font("Segoe UI", 10) };
+            this.Controls.Add(lblName);
+
+            txtCustomerName.Location = new Point(50, startY + 25);
+            txtCustomerName.Width = 300;
+            
+            // CheckBox re-position
+            chkStudent.Location = new Point(50, startY + 65);
+
+            // Button re-position
+            btnConfirmPayment.Location = new Point(50, startY + 110);
+            btnConfirmPayment.Size = new Size(180, 45);
+            
+            btnCancel.Location = new Point(250, startY + 110);
+            btnCancel.Size = new Size(100, 45);
+
             // Input Stili
             txtCustomerName.BorderStyle = BorderStyle.FixedSingle; // Çerçeve olsun
             txtCustomerName.BackColor = Color.FromArgb(50, 50, 50); // Daha açık bir ton
@@ -104,7 +162,14 @@ namespace SinemaBiletOtomasyonu.Forms
             }
             
             this.totalPrice = unitPrice * seatIds.Count;
-            lblTotalPrice.Text = $"{totalPrice:C}" + (isMatinee ? " (Matine)" : "");
+            // lblTotalPrice.Text = ... No longer used
+            
+             // Panele force redraw yapmamız lazım ama panele erişim scope dışı. 
+             // En temizi pnlReceipt'i sınıf seviyesine taşımak veya buradaki controllerdan bulmak.
+             foreach(Control c in this.Controls)
+             {
+                 if(c is Panel p) p.Invalidate();
+             }
         }
         
         private void StyleButton(Button btn, Color color)

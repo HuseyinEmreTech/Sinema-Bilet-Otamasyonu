@@ -11,21 +11,27 @@ namespace SinemaBiletOtomasyonu.Forms
         private int duration = 0;
         private Label lblWelcome;
         private Label lblSub;
+        
+        // Curtain Panels
+        private Panel pnlLeftCurtain;
+        private Panel pnlRightCurtain;
+        private int curtainWidth;
 
         public WelcomeForm()
         {
             this.FormBorderStyle = FormBorderStyle.None;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.Size = new Size(600, 350);
-            this.BackColor = ModernUIHelper.DarkBackground;
-            this.Opacity = 0;
+            this.BackColor = ModernUIHelper.DarkBackground; // Logo background
+            this.Opacity = 1; // Start fully visible for curtains
 
+            // Content (Behind Curtains)
             lblWelcome = new Label();
             lblWelcome.Text = "SİNEMA DÜNYASI";
             lblWelcome.Font = new Font("Segoe UI", 24, FontStyle.Bold);
             lblWelcome.ForeColor = ModernUIHelper.PrimaryColor;
             lblWelcome.AutoSize = true;
-            lblWelcome.Location = new Point((this.Width - 300) / 2, 120); // Center approx
+            lblWelcome.Location = new Point((this.Width - 300) / 2, 120);
             
             lblSub = new Label();
             lblSub.Text = "Hoş Geldiniz...";
@@ -37,37 +43,74 @@ namespace SinemaBiletOtomasyonu.Forms
             this.Controls.Add(lblWelcome);
             this.Controls.Add(lblSub);
 
-            // Center manually
+            // Center Content
             lblWelcome.Location = new Point((this.Width - lblWelcome.PreferredWidth) / 2, 120);
             lblSub.Location = new Point((this.Width - lblSub.PreferredWidth) / 2, 170);
 
+            // Initialize Curtains
+            curtainWidth = this.Width / 2;
+            
+            pnlLeftCurtain = new Panel();
+            pnlLeftCurtain.Size = new Size(curtainWidth, this.Height);
+            pnlLeftCurtain.Location = new Point(0, 0);
+            pnlLeftCurtain.BackColor = Color.FromArgb(192, 57, 43); // Red Curtain
+            pnlLeftCurtain.Paint += Curtain_Paint; // Add some folds?
+            this.Controls.Add(pnlLeftCurtain);
+            this.Controls.SetChildIndex(pnlLeftCurtain, 0); // Bring to front
+
+            pnlRightCurtain = new Panel();
+            pnlRightCurtain.Size = new Size(curtainWidth, this.Height);
+            pnlRightCurtain.Location = new Point(curtainWidth, 0);
+            pnlRightCurtain.BackColor = Color.FromArgb(192, 57, 43);
+            pnlRightCurtain.Paint += Curtain_Paint;
+            this.Controls.Add(pnlRightCurtain);
+            this.Controls.SetChildIndex(pnlRightCurtain, 0);
+
             timer = new Timer();
-            timer.Interval = 30; // 30ms render
+            timer.Interval = 20; // Faster
             timer.Tick += Timer_Tick;
             timer.Start();
         }
 
+        private void Curtain_Paint(object sender, PaintEventArgs e)
+        {
+            // Simple Fold Effect
+            Panel p = sender as Panel;
+            Graphics g = e.Graphics;
+            using (Pen pen = new Pen(Color.FromArgb(50, 0, 0, 0), 2))
+            {
+                for(int i=0; i<p.Width; i+=40)
+                {
+                    g.DrawLine(pen, i, 0, i, p.Height);
+                }
+            }
+        }
+
         private void Timer_Tick(object sender, EventArgs e)
         {
-            duration += 30;
+            duration += 20;
 
-            // Fade In (First 1 sec)
-            if (duration < 1000)
+            // Wait 500ms then Open
+            if(duration > 500)
             {
-                if (this.Opacity < 1) this.Opacity += 0.05;
-            }
-            
-            // Wait (1-2.5 sec)
-            if (duration > 2500)
-            {
-                // Fade Out
-                if (this.Opacity > 0) 
-                    this.Opacity -= 0.05;
+                // Open Curtains
+                if (pnlLeftCurtain.Width > 0)
+                {
+                    int step = 10;
+                    pnlLeftCurtain.Width -= step;
+                    
+                    pnlRightCurtain.Width -= step;
+                    pnlRightCurtain.Left += step;
+                }
                 else
                 {
-                    timer.Stop();
-                    this.DialogResult = DialogResult.OK; // Sinyal ver
-                    this.Close();
+                    // Fully Open, wait a bit then close
+                    if (duration > 2500)
+                    {
+                        timer.Stop();
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
                 }
             }
         }

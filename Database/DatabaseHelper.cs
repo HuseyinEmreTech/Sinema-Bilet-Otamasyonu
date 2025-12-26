@@ -18,6 +18,9 @@ namespace SinemaBiletOtomasyonu.Database
         public List<Ticket> Tickets { get; set; } = new List<Ticket>();
     }
 
+    /// <summary>
+    /// Veritabanı bağlantısı ve veri işlemlerini (CRUD) yöneten merkezi sınıf.
+    /// </summary>
     public static class DatabaseHelper
     {
         private static DataStore store = new DataStore();
