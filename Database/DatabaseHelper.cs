@@ -110,7 +110,7 @@ namespace SinemaBiletOtomasyonu.Database
             }
         }
         
-        private static void CreateSeatsForHall(int hallId)
+        public static void CreateSeatsForHall(int hallId)
         {
             Hall hall = store.Halls.FirstOrDefault(h => h.HallId == hallId);
             if(hall == null) return;
@@ -172,12 +172,16 @@ namespace SinemaBiletOtomasyonu.Database
             var film = GetFilmById(filmId);
             if (film != null)
             {
-                // Remove related sessions/tickets?
-                // Soft delete
+                // Soft delete film
                 film.IsDeleted = true;
                 
-                // Keep sessions! 
-                // store.Sessions.RemoveAll(s => s.FilmId == filmId);
+                // Cascade delete: Remove associated sessions and their tickets
+                var sessionsToDelete = store.Sessions.Where(s => s.FilmId == filmId).ToList();
+                foreach (var session in sessionsToDelete)
+                {
+                    store.Tickets.RemoveAll(t => t.SessionId == session.SessionId);
+                    store.Sessions.Remove(session);
+                }
                 
                 SaveData();
                 return true;
@@ -194,6 +198,43 @@ namespace SinemaBiletOtomasyonu.Database
         public static Hall GetHallById(int hallId)
         {
             return store.Halls.FirstOrDefault(h => h.HallId == hallId);
+        }
+
+        public static void AddHall(Hall hall)
+        {
+            int newId = store.Halls.Any() ? store.Halls.Max(h => h.HallId) + 1 : 1;
+            hall.HallId = newId;
+            store.Halls.Add(hall);
+            
+            // Otomatik koltuk üretimi
+            CreateSeatsForHall(newId);
+            
+            SaveData();
+        }
+
+        public static bool DeleteHall(int hallId)
+        {
+            var hall = GetHallById(hallId);
+            if (hall != null)
+            {
+                // Cascade delete: Remove sessions and their tickets first
+                var sessionsToDelete = store.Sessions.Where(s => s.HallId == hallId).ToList();
+                foreach (var session in sessionsToDelete)
+                {
+                    store.Tickets.RemoveAll(t => t.SessionId == session.SessionId);
+                    store.Sessions.Remove(session);
+                }
+
+                // Remove all seats of this hall
+                store.Seats.RemoveAll(s => s.HallId == hallId);
+
+                // Finally remove the hall
+                store.Halls.Remove(hall);
+                
+                SaveData();
+                return true;
+            }
+            return false;
         }
 
         // --- Koltuk İşlemleri ---
@@ -271,12 +312,26 @@ namespace SinemaBiletOtomasyonu.Database
 
         public static bool AddSession(Session session)
         {
-            // Basit çakışma kontrolü: Aynı Salon, Aynı Saat
-            if(store.Sessions.Any(s => s.HallId == session.HallId && s.Time == session.Time))
+            // Basit çakışma kontrolü: Aynı Salon, Süre Dahilinde Çakışma Kontrolü
+            var newFilm = GetFilmById(session.FilmId);
+            if (newFilm == null) return false;
+
+            if (!TimeSpan.TryParse(session.Time, out TimeSpan newSessionStart)) return false;
+            TimeSpan newSessionEnd = newSessionStart.Add(TimeSpan.FromMinutes(newFilm.Duration + 20)); // 20 dk temizlik payı
+
+            foreach (var existingSession in store.Sessions.Where(s => s.HallId == session.HallId))
             {
-                // Çakışma var!
-                // Daha ileri seviye kontrol: Film süresi vs. eklenebilir ama şimdilik exact match
-                return false; 
+                var existingFilm = GetFilmById(existingSession.FilmId);
+                if (existingFilm == null) continue;
+
+                if (!TimeSpan.TryParse(existingSession.Time, out TimeSpan existingStart)) continue;
+                TimeSpan existingEnd = existingStart.Add(TimeSpan.FromMinutes(existingFilm.Duration + 20));
+
+                // Çakışma mantığı: (StartA < EndB) ve (StartB < EndA)
+                if (newSessionStart < existingEnd && existingStart < newSessionEnd)
+                {
+                    return false; // Salon bu saatte meşgul
+                }
             }
 
             int newId = store.Sessions.Any() ? store.Sessions.Max(s => s.SessionId) + 1 : 1;

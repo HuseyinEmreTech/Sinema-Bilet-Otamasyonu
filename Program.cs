@@ -17,7 +17,7 @@ namespace SinemaBiletOtomasyonu
 
             // Veritabanını başlat
             DatabaseHelper.InitializeDatabase();
-            DatabaseHelper.SeedData();
+            // DatabaseHelper.SeedData(); // Veritabanı boş gelsin istendiği için devre dışı bırakıldı.
 
             // Ana formu başlat
             // Splash Screen

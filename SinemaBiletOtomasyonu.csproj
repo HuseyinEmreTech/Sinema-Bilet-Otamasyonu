@@ -62,6 +62,9 @@
     <Compile Include="Forms\AdminDashboardForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\AddEditHallForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\AdminLoginForm.cs">
       <SubType>Form</SubType>
     </Compile>

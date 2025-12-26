@@ -13,11 +13,17 @@ namespace SinemaBiletOtomasyonu.Forms
         private TabControl tabControl;
         private TabPage tabFilms;
         private TabPage tabSessions;
+        private TabPage tabHalls;
         private TabPage tabReports;
         
         private DataGridView dgvFilms;
         private Button btnAddFilm;
         private Button btnDeleteFilm;
+
+        // Hall Tab Controls
+        private DataGridView dgvHalls;
+        private Button btnAddHall;
+        private Button btnDeleteHall;
         
         // Session Tab Controls
         private DataGridView dgvSessions;
@@ -49,15 +55,20 @@ namespace SinemaBiletOtomasyonu.Forms
             tabSessions = new TabPage("Seans Yönetimi");
             tabSessions.BackColor = ModernUIHelper.PanelBackground;
             
+            tabHalls = new TabPage("Salon Yönetimi");
+            tabHalls.BackColor = ModernUIHelper.PanelBackground;
+            
             tabReports = new TabPage("Raporlar");
             tabReports.BackColor = ModernUIHelper.PanelBackground;
             
             tabControl.Controls.Add(tabFilms);
+            tabControl.Controls.Add(tabHalls);
             tabControl.Controls.Add(tabSessions);
             tabControl.Controls.Add(tabReports);
             this.Controls.Add(tabControl);
             
             InitializeFilmsTab();
+            InitializeHallsTab();
             InitializeSessionsTab();
             InitializeReportsTab();
         }
@@ -106,6 +117,40 @@ namespace SinemaBiletOtomasyonu.Forms
             btnDeleteFilm.FlatAppearance.BorderSize = 0;
             btnDeleteFilm.Click += BtnDeleteFilm_Click;
             tabFilms.Controls.Add(btnDeleteFilm);
+        }
+
+        private void InitializeHallsTab()
+        {
+            dgvHalls = new DataGridView();
+            dgvHalls.Location = new Point(20, 20);
+            dgvHalls.Size = new Size(740, 400);
+            dgvHalls.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvHalls.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvHalls.BackgroundColor = ModernUIHelper.PanelBackground;
+            dgvHalls.BorderStyle = BorderStyle.None;
+            dgvHalls.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvHalls.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            dgvHalls.RowHeadersVisible = false;
+            dgvHalls.EnableHeadersVisualStyles = false;
+            dgvHalls.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(45, 45, 48);
+            dgvHalls.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dgvHalls.DefaultCellStyle.BackColor = Color.FromArgb(30, 30, 30);
+            dgvHalls.DefaultCellStyle.ForeColor = Color.WhiteSmoke;
+            dgvHalls.DefaultCellStyle.SelectionBackColor = ModernUIHelper.PrimaryColor;
+            
+            tabHalls.Controls.Add(dgvHalls);
+            
+            RefreshHallList();
+
+            btnAddHall = new Button { Text = " + YENİ SALON", Location = new Point(20, 440), Size = new Size(180, 45), BackColor = ModernUIHelper.PrimaryColor, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Cursor = Cursors.Hand };
+            btnAddHall.FlatAppearance.BorderSize = 0;
+            btnAddHall.Click += BtnAddHall_Click;
+            tabHalls.Controls.Add(btnAddHall);
+            
+            btnDeleteHall = new Button { Text = "SİL", Location = new Point(220, 440), Size = new Size(120, 45), BackColor = Color.FromArgb(200, 50, 50), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Cursor = Cursors.Hand };
+            btnDeleteHall.FlatAppearance.BorderSize = 0;
+            btnDeleteHall.Click += BtnDeleteHall_Click;
+            tabHalls.Controls.Add(btnDeleteHall);
         }
 
         private void InitializeReportsTab()
@@ -281,6 +326,40 @@ namespace SinemaBiletOtomasyonu.Forms
                 {
                     DatabaseHelper.DeleteSession(sId);
                     RefreshSessionList();
+                }
+            }
+        }
+
+        private void RefreshHallList()
+        {
+            dgvHalls.DataSource = null;
+            dgvHalls.DataSource = DatabaseHelper.GetAllHalls();
+            // Also refresh sessions tab comboboxes because halls might have changed
+            if (cmbHalls != null) RefreshSessionList();
+        }
+
+        private void BtnAddHall_Click(object sender, EventArgs e)
+        {
+            using (AddEditHallForm form = new AddEditHallForm())
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    DatabaseHelper.AddHall(form.RESULT_HALL);
+                    RefreshHallList();
+                    MessageBox.Show("Salon Başarıyla Eklendi! Koltuklar otomatik oluşturuldu.");
+                }
+            }
+        }
+
+        private void BtnDeleteHall_Click(object sender, EventArgs e)
+        {
+            if (dgvHalls.SelectedRows.Count > 0)
+            {
+                int hallId = (int)dgvHalls.SelectedRows[0].Cells["HallId"].Value;
+                if (MessageBox.Show("Bu salonu silmek istediğinize emin misiniz? Bu işlem bağlı seansları ve biletleri de SİLECEKTİR!", "Kritik Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    DatabaseHelper.DeleteHall(hallId);
+                    RefreshHallList();
                 }
             }
         }
