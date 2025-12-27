@@ -20,8 +20,19 @@ namespace SinemaBiletOtomasyonu
             // DatabaseHelper.SeedData(); // Veritabanı boş gelsin istendiği için devre dışı bırakıldı.
 
             // Ana formu başlat
-            // Splash Screen
-            WelcomeForm splash = new WelcomeForm();
+            // Splash Screen Seçimi
+            string videoPath = System.IO.Path.Combine(Application.StartupPath, "intro.mp4");
+            Form splash;
+
+            if (System.IO.File.Exists(videoPath))
+            {
+                splash = new VideoWelcomeForm(videoPath);
+            }
+            else
+            {
+                splash = new WelcomeForm();
+            }
+
             if (splash.ShowDialog() == DialogResult.OK)
             {
                 Application.Run(new MainForm());

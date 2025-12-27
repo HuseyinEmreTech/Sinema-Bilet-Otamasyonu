@@ -1,0 +1,28 @@
+VİDEO AÇILIŞ SAHNESİ EKLEME REHBERİ
+====================================
+
+Bu rehber, uygulamanın açılışına nasıl özel bir video ekleyeceğinizi açıklar.
+
+1. ADIM: Videonuzu Hazırlayın
+-----------------------------
+- Videonuzun formatı .mp4 olmalıdır.
+- Videonun ismini tam olarak "intro.mp4" (küçük harflerle) yapın.
+
+2. ADIM: Videoyu Projeye Yerleştirin
+------------------------------------
+- Hazırladığınız "intro.mp4" dosyasını kopyalayın.
+- Projenin ana klasörüne (SinemaBiletOtomasyonu.csproj dosyasının olduğu yere) gidin.
+- Videoyu buraya yapıştırın.
+
+3. ADIM: Çalıştırma ve Kontrol
+------------------------------
+- Visual Studio üzerinden projeyi çalıştırdığınızda (F5), uygulama otomatik olarak bu videoyu algılayacak ve açılışta oynatacaktır.
+- Video bittiğinde ana ekran açılır.
+- İsterseniz video oynarken fare ile herhangi bir yere tıklayarak videoyu geçebilirsiniz.
+
+ÖNEMLİ NOTLAR:
+--------------
+- Eğer videoyu kaldırmak isterseniz, "intro.mp4" dosyasını silmeniz veya ismini değiştirmeniz yeterlidir. Bu durumda uygulama orijinal perde animasyonu (WelcomeForm) ile açılacaktır.
+- Uygulama yayınlandığında (Publish/Release), "intro.mp4" dosyası .exe dosyasının yanında bulunmalıdır.
+
+İyi çalışmalar!
